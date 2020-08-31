@@ -19,11 +19,11 @@
                 </label>
                 <hr class="pt-5" />
                 <label class="block px-4 font-bold">
-                    <input class="mr-2 leading-tight" type="radio" name="mode" v-model="mode" value="gokz">
+                    <input class="mr-2 leading-tight" type="radio" name="mode" v-model="mode" value="gokz" @change="onModeChange">
                     <span>GOKZ</span>
                 </label>
                 <label class="block px-4 font-bold">
-                    <input class="mr-2 leading-tight" type="radio" name="mode" v-model="mode" value="kztimer">
+                    <input class="mr-2 leading-tight" type="radio" name="mode" v-model="mode" value="kztimer" @change="onModeChange">
                     <span>KZTimer</span>
                 </label>
                 <hr class="pt-5" />
@@ -65,6 +65,9 @@
                 mapCount: 0
             },
             methods: {
+                onModeChange() {
+                    localStorage.setItem('mode', this.mode);
+                },
                 generateMapcycle() {
                     console.log('generating mapcycle');
                     console.log('selected tiers: ' + this.selectedTiers.join());
@@ -92,6 +95,7 @@
                 }
             },
             mounted() {
+                this.mode = localStorage.getItem('mode') || 'gokz';
                 axios
                     .get('https://kztimerglobal.com/api/v1.0/maps?is_validated=true&limit=999')
                     .then(response => {
