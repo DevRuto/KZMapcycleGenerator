@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KZ MapCycle Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-500">
+    <div id="app" class="container lg:mx-auto lg:w-2/3 pt-5 p-5">
+        <h1 class="text-base lg:pb-10 pb-5">KZ MapCycle Generator</h1>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label v-for="(name, tier) of tiers" class="block px-4 font-bold">
+                    <input class="mr-2 leading-tight" :value="tier" type="checkbox" v-model="selectedTiers">
+                    <span>{{ name }}</span>
+                </label>
+                <hr class="pt-5" />
+                <label class="block px-4 font-bold">
+                    <input class="mr-2 leading-tight" type="radio" name="mode" v-model="mode" value="gokz">
+                    <span>GOKZ</span>
+                </label>
+                <label class="block px-4 font-bold">
+                    <input class="mr-2 leading-tight" type="radio" name="mode" v-model="mode" value="kztimer">
+                    <span>KZTimer</span>
+                </label>
+                <hr class="pt-5" />
+                <label class="block px-4 font-bold">
+                    <input class="mr-2 leading-tight" type="checkbox" v-model="mapchooser">
+                    <span>Check for Tiered Mapchooser</span>
+                </label>
+                <hr class="pt-5" />
+                <button
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    @click="generateMapcycle"
+                >Generate</button>
+            </div>
+            <div>
+                <h2>Map Count: {{ mapCount }}</h2>
+                <textarea rows="25" class="resize w-full border rounded focus:outline-none focus:shadow-outline" v-model="output"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                tiers: {
+                    1: 'Very Easy',
+                    2: 'Easy',
+                    3: 'Medium',
+                    4: 'Hard',
+                    5: 'Very Hard',
+                    6: 'Extreme',
+                    7: 'Death'
+                },
+                selectedTiers: [],
+                maps: [],
+                output: '',
+                mode: 'gokz',
+                mapchooser: false,
+                mapCount: 0
+            },
+            methods: {
+                generateMapcycle() {
+                    console.log('generating mapcycle');
+                    console.log('selected tiers: ' + this.selectedTiers.join());
+                    console.log('mapchooser: ' + this.mapchooser);
+                    let maps = this.maps
+                                .filter(map => this.selectedTiers.includes(String(map.difficulty)));
+                    if (this.mode === 'kztimer') {
+                        maps = maps.filter(map => !map.name.startsWith('skz_') && !map.name.startsWith('vnl'));
+                    }
+                    if (this.mapchooser) {
+                        this.output = '';
+                        this.mapCount = 0;
+                        maps = maps
+                                .sort((a, b) => a.name > b.name);
+                        maps.forEach(map => {
+                            this.output += `"${map.name}" "${map.name} (${this.tiers[map.difficulty]})"\n`;
+                            this.mapCount++;
+                        });
+                    } else {
+                        this.output = maps
+                                        .sort((a, b) => a.name > b.name)
+                                        .map(map => map.name).join('\n');
+                        this.mapCount = maps.length;
+                    }
+                }
+            },
+            mounted() {
+                axios
+                    .get('https://kztimerglobal.com/api/v1.0/maps?is_validated=true&limit=999')
+                    .then(response => {
+                        this.maps = response.data;
+                        this.maps.sort((a, b) => a.name > b.name);
+                    });
+            }
+        });
+    </script>
+</body>
+</html>
